@@ -50,7 +50,7 @@ open class FolioReaderContainer: UIViewController {
     self.unzipPath = unzipPath
     self.shouldRemoveEpub = removeEpub
     self.book = FRBook()
-    self.navigationController = navigationController
+    self.centerNavigationController = navigationController
     super.init(nibName: nil, bundle: Bundle.frameworkBundle())
     
     // Configure the folio reader.
