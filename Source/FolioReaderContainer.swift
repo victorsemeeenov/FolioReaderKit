@@ -138,8 +138,6 @@ open class FolioReaderContainer: UIViewController {
     
     if let rootViewController = self.centerViewController {
       if let centerNavigationController = centerNavigationController {
-        centerNavigationController.pushViewController(centerNavigationController,
-                                                      animated: false)
         view.addSubview(rootViewController.view)
         addChild(rootViewController)
         rootViewController.didMove(toParent: self)
