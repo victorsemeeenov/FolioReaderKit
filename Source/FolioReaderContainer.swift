@@ -22,6 +22,8 @@ open class FolioReaderContainer: UIViewController {
   public var centerNavigationController: UINavigationController?
   public var centerViewController: FolioReaderCenter?
   public var audioPlayer: FolioReaderAudioPlayer?
+  public var customNavBar: UIView?
+  public var bookContentContainer: UIView?
   
   public var readerConfig: FolioReaderConfig
   public var folioReader: FolioReader
@@ -117,7 +119,9 @@ open class FolioReaderContainer: UIViewController {
   
   override open func viewDidLoad() {
     super.viewDidLoad()
-    
+    view.translatesAutoresizingMaskIntoConstraints = false
+    addCustomNavBarIfNeeded()
+    addBookContentContainerIfNeeded()
     let canChangeScrollDirection = self.readerConfig.canChangeScrollDirection
     self.readerConfig.canChangeScrollDirection = self.readerConfig.isDirection(canChangeScrollDirection, canChangeScrollDirection, false)
     
@@ -138,7 +142,11 @@ open class FolioReaderContainer: UIViewController {
     
     if let rootViewController = self.centerViewController {
       if let centerNavigationController = centerNavigationController {
-        view.addSubview(rootViewController.view)
+        if let bookContainer = bookContentContainer {
+          bookContainer.addSubview(rootViewController.view)
+        } else {
+          view.addSubview(rootViewController.view)
+        }
         addChild(rootViewController)
         rootViewController.didMove(toParent: self)
       } else {
@@ -186,6 +194,37 @@ open class FolioReaderContainer: UIViewController {
         self.errorOnLoad = true
         self.alert(message: error.localizedDescription)
       }
+    }
+  }
+  
+  open func addCustomNavBarIfNeeded() {
+    if let customNavBar = customNavBar {
+      view.addSubview(customNavBar)
+      let top = customNavBar.topAnchor.constraint(equalToSystemSpacingBelow: view.topAnchor,
+                                                  multiplier: 0)
+      let leading = customNavBar.leadingAnchor.constraint(equalToSystemSpacingAfter: view.leadingAnchor,
+                                                          multiplier: 0)
+      let trailing = customNavBar.trailingAnchor.constraint(equalToSystemSpacingAfter: view.trailingAnchor,
+                                                           multiplier: 0)
+      NSLayoutConstraint.activate([top, leading, trailing])
+    }
+  }
+  
+  open func addBookContentContainerIfNeeded() {
+    guard let bookContentContainer = bookContentContainer else { return }
+    view.addSubview(bookContentContainer)
+    if let customNavBar = customNavBar {
+      let top = bookContentContainer.topAnchor.constraint(equalToSystemSpacingBelow: customNavBar.bottomAnchor,
+                                                multiplier: 0)
+      let leading = bookContentContainer
+        .leadingAnchor.constraint(equalToSystemSpacingAfter: view.leadingAnchor,
+                                  multiplier: 0)
+      let trailing = bookContentContainer
+        .trailingAnchor.constraint(equalToSystemSpacingAfter: view.trailingAnchor,
+                                   multiplier: 0)
+      let bottom = bookContentContainer.bottomAnchor.constraint(equalToSystemSpacingBelow: view.bottomAnchor,
+                                                                multiplier: 0)
+      NSLayoutConstraint.activate([top, leading, trailing, bottom])
     }
   }
   
