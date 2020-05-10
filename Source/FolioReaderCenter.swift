@@ -11,25 +11,26 @@ import ZFDragableModalTransition
 
 /// Protocol which is used from `FolioReaderCenter`s.
 @objc public protocol FolioReaderCenterDelegate: class {
-
-    /// Notifies that a page appeared. This is triggered when a page is chosen and displayed.
-    ///
-    /// - Parameter page: The appeared page
-    @objc optional func pageDidAppear(_ page: FolioReaderPage)
-
-    /// Passes and returns the HTML content as `String`. Implement this method if you want to modify the HTML content of a `FolioReaderPage`.
-    ///
-    /// - Parameters:
-    ///   - page: The `FolioReaderPage`.
-    ///   - htmlContent: The current HTML content as `String`.
-    /// - Returns: The adjusted HTML content as `String`. This is the content which will be loaded into the given `FolioReaderPage`.
-    @objc optional func htmlContentForPage(_ page: FolioReaderPage, htmlContent: String) -> String
-    
-    /// Notifies that a page changed. This is triggered when collection view cell is changed.
-    ///
-    /// - Parameter pageNumber: The appeared page item
-    @objc optional func pageItemChanged(_ pageNumber: Int)
-
+  
+  /// Notifies that a page appeared. This is triggered when a page is chosen and displayed.
+  ///
+  /// - Parameter page: The appeared page
+  @objc optional func pageDidAppear(_ page: FolioReaderPage)
+  
+  /// Passes and returns the HTML content as `String`. Implement this method if you want to modify the HTML content of a `FolioReaderPage`.
+  ///
+  /// - Parameters:
+  ///   - page: The `FolioReaderPage`.
+  ///   - htmlContent: The current HTML content as `String`.
+  /// - Returns: The adjusted HTML content as `String`. This is the content which will be loaded into the given `FolioReaderPage`.
+  @objc optional func htmlContentForPage(_ page: FolioReaderPage, htmlContent: String) -> String
+  
+  /// Notifies that a page changed. This is triggered when collection view cell is changed.
+  ///
+  /// - Parameter pageNumber: The appeared page item
+  @objc optional func pageItemChanged(_ pageNumber: Int)
+  @objc optional func configureBarButtonItems(for navigationItem: UINavigationItem)
+  @objc optional func configureNavigationBar(_ navigationBar: UINavigationBar)
 }
 
 /// The base reader class
@@ -250,47 +251,13 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     }
 
     func configureNavBar() {
-        let navBackground = folioReader.isNight(self.readerConfig.nightModeNavBackground, self.readerConfig.daysModeNavBackground)
-        let tintColor = readerConfig.tintColor
-        let navText = folioReader.isNight(UIColor.white, UIColor.black)
-        let font = UIFont(name: "Avenir-Light", size: 17)!
-        setTranslucentNavigation(color: navBackground, tintColor: tintColor, titleColor: navText, andFont: font)
+      if let navigationBar = navigationController?.navigationBar {
+        delegate?.configureNavigationBar?(navigationBar)
+      }
     }
 
     func configureNavBarButtons() {
-
-        // Navbar buttons
-        let shareIcon = UIImage(readerImageNamed: "icon-navbar-share")?.ignoreSystemTint(withConfiguration: self.readerConfig)
-        let audioIcon = UIImage(readerImageNamed: "icon-navbar-tts")?.ignoreSystemTint(withConfiguration: self.readerConfig) //man-speech-icon
-        let closeIcon = UIImage(readerImageNamed: "icon-navbar-close")?.ignoreSystemTint(withConfiguration: self.readerConfig)
-        let tocIcon = UIImage(readerImageNamed: "icon-navbar-toc")?.ignoreSystemTint(withConfiguration: self.readerConfig)
-        let fontIcon = UIImage(readerImageNamed: "icon-navbar-font")?.ignoreSystemTint(withConfiguration: self.readerConfig)
-        let space = 70 as CGFloat
-
-        let menu = UIBarButtonItem(image: closeIcon, style: .plain, target: self, action:#selector(closeReader(_:)))
-        let toc = UIBarButtonItem(image: tocIcon, style: .plain, target: self, action:#selector(presentChapterList(_:)))
-
-        navigationItem.leftBarButtonItems = [menu, toc]
-
-        var rightBarIcons = [UIBarButtonItem]()
-
-        if (self.readerConfig.allowSharing == true) {
-            rightBarIcons.append(UIBarButtonItem(image: shareIcon, style: .plain, target: self, action:#selector(shareChapter(_:))))
-        }
-
-        if self.book.hasAudio || self.readerConfig.enableTTS {
-            rightBarIcons.append(UIBarButtonItem(image: audioIcon, style: .plain, target: self, action:#selector(presentPlayerMenu(_:))))
-        }
-
-        let font = UIBarButtonItem(image: fontIcon, style: .plain, target: self, action: #selector(presentFontsMenu))
-        font.width = space
-
-        rightBarIcons.append(contentsOf: [font])
-        navigationItem.rightBarButtonItems = rightBarIcons
-        
-        if(self.readerConfig.displayTitle){
-            navigationItem.title = book.title
-        }
+      delegate?.configureBarButtonItems?(for: navigationItem)
     }
 
     func reloadData() {
