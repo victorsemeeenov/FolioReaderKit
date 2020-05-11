@@ -8,6 +8,7 @@
 
 import Foundation
 import UIKit
+import WebKit
 
 extension UICollectionView.ScrollDirection {
     static func direction(withConfiguration readerConfig: FolioReaderConfig) -> UICollectionView.ScrollDirection {
@@ -528,5 +529,26 @@ extension Array {
      */
     subscript(safe index: Int) -> Element? {
         return indices ~= index ? self[index] : nil
+    }
+}
+
+extension WKWebView {
+    func evaluate(script: String, completion: @escaping (Any?, Error?) -> Void) {
+        var finished = false
+
+        evaluateJavaScript(script, completionHandler: { (result, error) in
+            if error == nil {
+                if result != nil {
+                    completion(result, nil)
+                }
+            } else {
+                completion(nil, error)
+            }
+            finished = true
+        })
+
+        while !finished {
+            RunLoop.current.run(mode: RunLoop.Mode(rawValue: "NSDefaultRunLoopMode"), before: NSDate.distantFuture)
+        }
     }
 }

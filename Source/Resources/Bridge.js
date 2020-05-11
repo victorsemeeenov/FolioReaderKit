@@ -154,6 +154,43 @@ function getBodyText() {
     return document.body.innerText;
 }
 
+function getElementOnTap() {
+  let str = null;
+  document.getElementById("clickable").addEventListener("click", () => {
+      s = window.getSelection();
+      let range = s.getRangeAt(0);
+      let node = s.anchorNode;
+      while (range.toString().indexOf(' ') != 0) {
+        range.setStart(node, (range.startOffset - 1));
+      }
+      range.setStart(node, range.startOffset + 1);
+      do {
+        range.setEnd(node, range.endOffset + 1);
+
+      }
+      while (range.toString().indexOf(' ') == -1 && range.toString().trim() != '');
+      this.str = range.toString().trim();
+    })
+  return str;
+}
+
+function selectedWordOnTap() {
+  s = window.getSelection();
+  let range = s.getRangeAt(0);
+  let node = s.anchorNode;
+  while (range.toString().indexOf(' ') != 0) {
+    range.setStart(node, (range.startOffset - 1));
+  }
+  range.setStart(node, range.startOffset + 1);
+  do {
+    range.setEnd(node, range.endOffset + 1);
+
+  }
+  while (range.toString().indexOf(' ') == -1 && range.toString().trim() != '');
+  let str = range.toString().trim();
+  return str;
+}
+
 // Method that returns only selected text plain
 var getSelectedText = function() {
     return window.getSelection().toString();

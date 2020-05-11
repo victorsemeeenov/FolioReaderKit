@@ -187,7 +187,7 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         return tempHtmlContent as String
     }
 
-    // MARK: - UIWebView Delegate
+    // MARK: - WKWebView Delegate
 
     open func webViewDidFinishLoad(_ webView: UIWebView) {
         guard let webView = webView as? FolioReaderWebView else {
@@ -373,7 +373,7 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         self.delegate?.pageTap?(recognizer)
         
         if let _navigationController = self.folioReader.readerCenter?.navigationController, (_navigationController.isNavigationBarHidden == true) {
-            let selected = webView?.js("getSelectedText()")
+            let selected = webView?.js("getElementOnTap()")
             
             guard (selected == nil || selected?.isEmpty == true) else {
                 return
@@ -486,23 +486,7 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
     // MARK: UIMenu visibility
 
     override open func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
-        guard let webView = webView else { return false }
-
-        if UIMenuController.shared.menuItems?.count == 0 {
-            webView.isColors = false
-            webView.createMenu(options: false)
-        }
-
-        if !webView.isShare && !webView.isColors {
-            if let result = webView.js("getSelectedText()") , result.components(separatedBy: " ").count == 1 {
-                webView.isOneWord = true
-                webView.createMenu(options: false)
-            } else {
-                webView.isOneWord = false
-            }
-        }
-
-        return super.canPerformAction(action, withSender: sender)
+        return false
     }
 
     // MARK: ColorView fix for horizontal layout
