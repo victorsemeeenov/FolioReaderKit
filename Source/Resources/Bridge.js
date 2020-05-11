@@ -7,6 +7,7 @@
 //
 
 var thisHighlight;
+var thisSelection;
 var audioMarkClass;
 var wordsPerMinute = 180;
 
@@ -15,6 +16,22 @@ document.addEventListener("DOMContentLoaded", function(event) {
 //    for (var i=0; i<lnk.length; i++) {
 //        lnk[i].setAttribute("onclick","return callVerseURL(this);");
 //    }
+      const element = document.getElementsByClassName("clickable");
+                          element.addEventListener("click", {
+                            s = window.getSelection();
+                            let range = s.getRangeAt(0);
+                            let node = s.anchorNode;
+                            while (range.toString().indexOf(' ') != 0) {
+                              range.setStart(node, (range.startOffset - 1));
+                            }
+                            range.setStart(node, range.startOffset + 1);
+                            do {
+                              range.setEnd(node, range.endOffset + 1);
+
+                            }
+                            while (range.toString().indexOf(' ') == -1 && range.toString().trim() != '');
+                            this.thisSelection = range.toString().trim();
+                          })
 });
 
 // Generate a GUID
@@ -155,23 +172,7 @@ function getBodyText() {
 }
 
 function getElementOnTap() {
-  let str = null;
-  document.getElementById("clickable").addEventListener("click", () => {
-      s = window.getSelection();
-      let range = s.getRangeAt(0);
-      let node = s.anchorNode;
-      while (range.toString().indexOf(' ') != 0) {
-        range.setStart(node, (range.startOffset - 1));
-      }
-      range.setStart(node, range.startOffset + 1);
-      do {
-        range.setEnd(node, range.endOffset + 1);
-
-      }
-      while (range.toString().indexOf(' ') == -1 && range.toString().trim() != '');
-      this.str = range.toString().trim();
-    })
-  return str;
+  return thisSelection;
 }
 
 function selectedWordOnTap() {
