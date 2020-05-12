@@ -59,6 +59,17 @@ function setListeners(nodes) {
                                   }
                                   while (((range.toString().indexOf(' ') == -1) && (event.target.innerText.length != range.endOffset)) && (range.toString().trim() != ''));
                                   thisSelection = range.toString().trim();
+                                  var selectionContents = range.extractContents();
+                                  var elm = document.createElement("highlight");
+                                  var id = guid();
+                                  
+                                  elm.appendChild(selectionContents);
+                                  elm.setAttribute("id", id);
+                                  elm.setAttribute("onclick","callHighlightWithNoteURL(this);");
+                                  elm.setAttribute("class", "highlight-blue");
+                                  
+                                  range.insertNode(elm);
+                                  thisHighlight = elm;
     });
   }
 }
