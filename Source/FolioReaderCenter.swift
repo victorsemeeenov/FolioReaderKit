@@ -31,6 +31,7 @@ import ZFDragableModalTransition
   @objc optional func pageItemChanged(_ pageNumber: Int)
   @objc optional func configureBarButtonItems(for navigationItem: UINavigationItem)
   @objc optional func configureNavigationBar(_ navigationBar: UINavigationBar)
+  @objc optional func pageTap(_ recognizer: UITapGestureRecognizer, with selectedWord: String?)
 }
 
 /// The base reader class
@@ -1424,12 +1425,10 @@ extension FolioReaderCenter: FolioReaderPageDelegate {
         // Pass the event to the centers `pageDelegate`
         pageDelegate?.pageWillLoad?(page)
     }
-    
-    public func pageTap(_ recognizer: UITapGestureRecognizer) {
-        // Pass the event to the centers `pageDelegate`
-        pageDelegate?.pageTap?(recognizer)
-    }
-    
+  
+  public func pageTap(_ recognizer: UITapGestureRecognizer, with selectedWord: String?) {
+    delegate?.pageTap?(recognizer, with: selectedWord)
+  }
 }
 
 // MARK: FolioReaderChapterListDelegate
