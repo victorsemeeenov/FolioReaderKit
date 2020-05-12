@@ -12,27 +12,56 @@ var audioMarkClass;
 var wordsPerMinute = 180;
 
 document.addEventListener("DOMContentLoaded", function(event) {
-//    var lnk = document.getElementsByClassName("lnk");
-//    for (var i=0; i<lnk.length; i++) {
-//        lnk[i].setAttribute("onclick","return callVerseURL(this);");
-//    }
-      const element = document.getElementsByClassName("clickable");
-                          element.addEventListener("click", {
-                            s = window.getSelection();
-                            let range = s.getRangeAt(0);
-                            let node = s.anchorNode;
-                            while (range.toString().indexOf(' ') != 0) {
-                              range.setStart(node, (range.startOffset - 1));
-                            }
-                            range.setStart(node, range.startOffset + 1);
-                            do {
-                              range.setEnd(node, range.endOffset + 1);
-
-                            }
-                            while (range.toString().indexOf(' ') == -1 && range.toString().trim() != '');
-                            this.thisSelection = range.toString().trim();
-                          })
+  let paragraphElements = document.getElementsByTagName("p");
+  console.log(paragraphElements);
+  let nodes = [];
+  setListeners(paragraphElements)
+  for (var i=0; i<paragraphElements.length; i++) {
+    getChildElementsRecursive(paragraphElements[i], nodes);
+  }
+  setListeners(nodes);
+  console.log("nodes: " + nodes)
 });
+
+function getChildElementsRecursive(element, nodes) {
+  let childNodes = element.childNodes;
+  if (childNodes.length != 0) {
+    for (var i=0; i<childNodes.length; i++) {
+      console.log(childNodes);
+      getChildElementsRecursive(childNodes[i], nodes);
+    }
+  } else {
+    if (element instanceof Element) {
+      console.log(element);
+      nodes.push(element);
+    }
+  }
+}
+
+function setListeners(nodes) {
+  for (var i=0; i<nodes.length; i++) {
+    let listenerNode = nodes[i]
+    listenerNode.addEventListener("click",(event) => {
+                                  console.log(event);
+                                  s = window.getSelection();
+                                  let range = s.getRangeAt(0);
+                                  let node = s.anchorNode;
+                                  while ((range.toString().indexOf(' ') != 0) && (range.startOffset != 0)) {
+                                    console.log(range);
+                                    range.setStart(node, (range.startOffset - 1));
+                                  }
+                              if (range.toString()[0] == ' ') {
+                                range.setStart(node, range.startOffset + 1);
+                              }
+                                  do {
+                                    console.log(range);
+                                    range.setEnd(node, range.endOffset + 1);
+                                  }
+                                  while (((range.toString().indexOf(' ') == -1) && (event.target.innerText.length != range.endOffset)) && (range.toString().trim() != ''));
+                                  thisSelection = range.toString().trim();
+    });
+  }
+}
 
 // Generate a GUID
 function guid() {
@@ -171,7 +200,7 @@ function getBodyText() {
     return document.body.innerText;
 }
 
-function getElementOnTap() {
+var getElementOnTap = function() {
   return thisSelection;
 }
 

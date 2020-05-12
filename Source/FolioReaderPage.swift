@@ -32,7 +32,7 @@ import MenuItemKit
      
      - parameter recognizer: The tap recognizer
      */
-    @objc optional func pageTap(_ recognizer: UITapGestureRecognizer)
+  @objc optional func pageTap(_ recognizer: UITapGestureRecognizer, with selectedWord: String?)
 }
 
 open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecognizerDelegate {
@@ -370,28 +370,32 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
     }
 
     @objc open func handleTapGesture(_ recognizer: UITapGestureRecognizer) {
-        self.delegate?.pageTap?(recognizer)
-        
-        if let _navigationController = self.folioReader.readerCenter?.navigationController, (_navigationController.isNavigationBarHidden == true) {
-            let selected = webView?.js("getElementOnTap()")
-            
-            guard (selected == nil || selected?.isEmpty == true) else {
-                return
-            }
-
-            let delay = 0.4 * Double(NSEC_PER_SEC) // 0.4 seconds * nanoseconds per seconds
-            let dispatchTime = (DispatchTime.now() + (Double(Int64(delay)) / Double(NSEC_PER_SEC)))
-            
-            DispatchQueue.main.asyncAfter(deadline: dispatchTime, execute: {
-                if (self.shouldShowBar == true && self.menuIsVisible == false) {
-                    self.folioReader.readerCenter?.toggleBars()
-                }
-            })
-        } else if (self.readerConfig.shouldHideNavigationOnTap == true) {
-            self.folioReader.readerCenter?.hideBars()
-            self.menuIsVisible = false
-        }
+      DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+        self.handleOneTap(recognizer: recognizer)
+      }
     }
+  
+  private func handleOneTap(recognizer: UITapGestureRecognizer) {
+    if let _navigationController = self.folioReader.readerCenter?.navigationController, (_navigationController.isNavigationBarHidden == true) {
+        let selected = webView?.js("getElementOnTap()")
+        self.delegate?.pageTap?(recognizer, with: selected)
+        guard (selected == nil || selected?.isEmpty == true) else {
+            return
+        }
+
+        let delay = 0.4 * Double(NSEC_PER_SEC) // 0.4 seconds * nanoseconds per seconds
+        let dispatchTime = (DispatchTime.now() + (Double(Int64(delay)) / Double(NSEC_PER_SEC)))
+        
+        DispatchQueue.main.asyncAfter(deadline: dispatchTime, execute: {
+            if (self.shouldShowBar == true && self.menuIsVisible == false) {
+                self.folioReader.readerCenter?.toggleBars()
+            }
+        })
+    } else if (self.readerConfig.shouldHideNavigationOnTap == true) {
+        self.folioReader.readerCenter?.hideBars()
+        self.menuIsVisible = false
+    }
+  }
 
     // MARK: - Public scroll postion setter
 
