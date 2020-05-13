@@ -10,6 +10,7 @@ var thisHighlight;
 var thisSelection;
 var audioMarkClass;
 var wordsPerMinute = 180;
+var lastNode;
 
 document.addEventListener("DOMContentLoaded", function(event) {
   let paragraphElements = document.getElementsByTagName("p");
@@ -42,10 +43,10 @@ function setListeners(nodes) {
   for (var i=0; i<nodes.length; i++) {
     let listenerNode = nodes[i]
     listenerNode.addEventListener("click",(event) => {
-                                  console.log(event);
                                   s = window.getSelection();
                                   let range = s.getRangeAt(0);
                                   let node = s.anchorNode;
+                                  console.log("Range=" + range.toString() + ";");
                                   while ((range.toString().indexOf(' ') != 0) && (range.startOffset != 0)) {
                                     console.log(range);
                                     range.setStart(node, (range.startOffset - 1));
@@ -53,12 +54,16 @@ function setListeners(nodes) {
                               if (range.toString()[0] == ' ') {
                                 range.setStart(node, range.startOffset + 1);
                               }
-                                  do {
-                                    console.log(range);
+                                  while (((range.toString().slice(-1) != ' ') && (event.target.innerText.length != range.endOffset)) && (range.toString().trim() != '')) {
                                     range.setEnd(node, range.endOffset + 1);
                                   }
-                                  while (((range.toString().indexOf(' ') == -1) && (event.target.innerText.length != range.endOffset)) && (range.toString().trim() != ''));
+                                  if (range.toString().slice(-1) == ' ') {
+                                    range.setEnd(node, range.endOffset - 1)
+                                  }
                                   thisSelection = range.toString().trim();
+                                  if ((range.toString() == " ") || (range.toString() == "")) {
+                                    return;
+                                  }
                                   var selectionContents = range.extractContents();
                                   var elm = document.createElement("highlight");
                                   var id = guid();

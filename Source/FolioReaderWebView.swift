@@ -104,11 +104,10 @@ open class FolioReaderWebView: UIWebView {
         setMenuVisible(true)
     }
 
-    func remove(_ sender: UIMenuController?) {
+    func remove() {
         if let removedId = js("removeThisHighlight()") {
             Highlight.removeById(withConfiguration: self.readerConfig, highlightId: removedId)
         }
-        setMenuVisible(false)
     }
 
     @objc func highlight(_ sender: UIMenuController?) {
@@ -262,7 +261,7 @@ open class FolioReaderWebView: UIWebView {
             self?.share(menuController)
         }
         let removeItem = UIMenuItem(title: "R", image: remove) { [weak self] _ in
-            self?.remove(menuController)
+            self?.remove()
         }
         let yellowItem = UIMenuItem(title: "Y", image: yellow) { [weak self] _ in
             self?.setYellow(menuController)
