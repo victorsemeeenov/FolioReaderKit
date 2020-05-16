@@ -31,7 +31,7 @@ import ZFDragableModalTransition
   @objc optional func pageItemChanged(_ pageNumber: Int)
   @objc optional func configureBarButtonItems(for navigationItem: UINavigationItem)
   @objc optional func configureNavigationBar(_ navigationBar: UINavigationBar)
-  @objc optional func pageTap(_ recognizer: UITapGestureRecognizer, with selectedWord: String?)
+  @objc optional func pageTap(at point: CGPoint, with selectedWord: String?)
 }
 
 /// The base reader class
@@ -127,6 +127,10 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         loadingView.startAnimating()
         self.view.addSubview(loadingView)
     }
+  
+  open func removeLastHighlight() {
+    currentPage?.removeLastHighlight()
+  }
 
     // MARK: - View life cicle
 
@@ -1426,8 +1430,8 @@ extension FolioReaderCenter: FolioReaderPageDelegate {
         pageDelegate?.pageWillLoad?(page)
     }
   
-  public func pageTap(_ recognizer: UITapGestureRecognizer, with selectedWord: String?) {
-    delegate?.pageTap?(recognizer, with: selectedWord)
+  public func pageTap(at point: CGPoint, with selectedWord: String?) {
+    delegate?.pageTap?(at: point, with: selectedWord)
   }
 }
 

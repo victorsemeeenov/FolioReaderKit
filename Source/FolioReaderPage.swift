@@ -32,7 +32,7 @@ import MenuItemKit
    
    - parameter recognizer: The tap recognizer
    */
-  @objc optional func pageTap(_ recognizer: UITapGestureRecognizer, with selectedWord: String?)
+  @objc optional func pageTap(at point: CGPoint, with selectedWord: String?)
 }
 
 open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecognizerDelegate {
@@ -48,6 +48,8 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
   fileprivate var shouldShowBar = true
   fileprivate var menuIsVisible = false
   private var currentHighlightID: String?
+  private var oneTapGesture: UITapGestureRecognizer?
+  private var twoTapsGesture: UITapGestureRecognizer?
   
   fileprivate var readerConfig: FolioReaderConfig {
     guard let readerContainer = readerContainer else { return FolioReaderConfig() }
@@ -103,13 +105,14 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
     let oneTap = UITapGestureRecognizer(target: self, action: #selector(handleTapGesture(_:)))
     oneTap.numberOfTapsRequired = 1
     oneTap.delegate = self
-    webView?.addGestureRecognizer(oneTap)
+    self.oneTapGesture = oneTap
+    contentView.addGestureRecognizer(oneTap)
     
     let twoTap = UITapGestureRecognizer(target: self, action: #selector(handleTwoTaps(_:)))
     twoTap.numberOfTapsRequired = 2
     twoTap.delegate = self
-    oneTap.shouldRequireFailure(of: twoTap)
-    webView?.addGestureRecognizer(twoTap)
+    self.twoTapsGesture = twoTap
+    contentView.addGestureRecognizer(twoTap)
   }
   
   required public init?(coder aDecoder: NSCoder) {
@@ -231,6 +234,10 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
     })
     
     delegate?.pageDidLoad?(self)
+  }
+  
+  open func removeLastHighlight() {
+    webView?.js("removeThisHighlight()")
   }
   
   open func webView(_ webView: UIWebView, shouldStartLoadWith request: URLRequest, navigationType: UIWebView.NavigationType) -> Bool {
@@ -360,21 +367,33 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
     true
   }
   
+  public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
+                                shouldRequireFailureOf otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+    if gestureRecognizer == oneTapGesture && otherGestureRecognizer == twoTapsGesture {
+      return true
+    }
+    return false
+  }
+  
   @objc open func handleTapGesture(_ recognizer: UITapGestureRecognizer) {
+    let state = recognizer.state
+    guard state != .cancelled || state != .failed else { return }
+    self.webView?.js("resetSelectionText()")
     self.webView?.js("removeThisHighlight()")
     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-      if self.shouldHandleTap {
-        self.handleOneTap(recognizer: recognizer)
-      } else {
-        self.shouldHandleTap = true
-      }
+      self.handleOneTap(recognizer: recognizer)
     }
   }
   
   private func handleOneTap(recognizer: UITapGestureRecognizer) {
     let selected = webView?.js("getElementOnTap()")
     currentHighlightID = webView?.js("getHighlightId()")
-    self.delegate?.pageTap?(recognizer, with: selected)
+    let xString = webView?.js("getHighlightX()")
+    let yString = webView?.js("getHighlightY()")
+    guard let xStr = xString, let yStr = yString,
+      let x = Int(xStr), let y = Int(yStr) else { return }
+    let point = CGPoint(x: x, y: y)
+    self.delegate?.pageTap?(at: point, with: selected)
   }
   
   @objc private func handleTwoTaps(_ recognizer: UITapGestureRecognizer) {
