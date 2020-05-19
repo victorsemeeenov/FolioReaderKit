@@ -9,6 +9,13 @@
 import UIKit
 import SafariServices
 import MenuItemKit
+import SwiftSoup
+
+extension String {
+  func replaceCharactersFromSet(characterSet: CharacterSet, replacementString: String = "") -> String {
+    components(separatedBy: characterSet).joined(separator: replacementString)
+  }
+}
 
 /// Protocol which is used from `FolioReaderPage`s.
 @objc public protocol FolioReaderPageDelegate: class {
@@ -154,9 +161,10 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
   func loadHTMLString(_ htmlContent: String!, baseURL: URL!) {
     // Insert the stored highlights to the HTML
     let tempHtmlContent = htmlContentWithInsertHighlights(htmlContent)
+    let finalHtmlContent = htmlWithInsertSentenceDots(tempHtmlContent)
     // Load the html into the webview
     webView?.alpha = 0
-    webView?.loadHTMLString(tempHtmlContent, baseURL: baseURL)
+    webView?.loadHTMLString(finalHtmlContent, baseURL: baseURL)
   }
   
   // MARK: - Highlights
@@ -196,6 +204,25 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
       }
     }
     return tempHtmlContent as String
+  }
+  
+  private func htmlWithInsertSentenceDots(_ htmlContent: String) -> String {
+    let parahraphs = htmlContent.components(separatedBy: "</p>")
+    let tag = """
+             <svg width="3" height="13" viewBox="0 0 3 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="1.5" cy="1.5" r="1.5" fill="#63A1FF"/>
+                <circle cx="1.5" cy="6.5" r="1.5" fill="#63A1FF"/>
+                <circle cx="1.5" cy="11.5" r="1.5" fill="#63A1FF"/>
+              </svg>
+            """
+    let finalString = parahraphs.map {
+      if $0.rangeOfCharacter(from: .lowercaseLetters) != nil {
+        return $0.appending(tag)
+      } else {
+        return $0
+      }
+    }.joined(separator: "</p>")
+    return finalString
   }
   
   // MARK: - WKWebView Delegate

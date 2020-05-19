@@ -26,6 +26,28 @@ document.addEventListener("DOMContentLoaded", function(event) {
   console.log("nodes: " + nodes)
 });
 
+function addDots() {
+    var range = window.getSelection().getRangeAt(0);
+    var startOffset = range.startOffset;
+    var endOffset = range.endOffset;
+    var selectionContents = range.extractContents();
+    var elm = document.createElement("highlight");
+    var id = guid();
+    
+    elm.appendChild(selectionContents);
+    elm.setAttribute("id", id);
+    elm.setAttribute("onclick","callHighlightURL(this);");
+    elm.setAttribute("class", style);
+    
+    range.insertNode(elm);
+    thisHighlight = elm;
+    
+    var params = [];
+    params.push({id: id, rect: getRectForSelectedText(elm), startOffset: startOffset.toString(), endOffset: endOffset.toString()});
+    
+    return JSON.stringify(params);
+}
+
 function getChildElementsRecursive(element, nodes) {
   let childNodes = element.childNodes;
   if (childNodes.length != 0) {
