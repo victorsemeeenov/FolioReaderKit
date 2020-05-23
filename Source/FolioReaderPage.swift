@@ -207,7 +207,6 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
   }
   
   private func htmlWithInsertSentenceDots(_ htmlContent: String) -> String {
-    let parahraphs = htmlContent.components(separatedBy: "</p>")
     let tag = """
              <svg width="3" height="13" viewBox="0 0 3 13" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="1.5" cy="1.5" r="1.5" fill="#63A1FF"/>
@@ -215,14 +214,22 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
                 <circle cx="1.5" cy="11.5" r="1.5" fill="#63A1FF"/>
               </svg>
             """
-    let finalString = parahraphs.map {
-      if $0.rangeOfCharacter(from: .lowercaseLetters) != nil {
-        return $0.appending(tag)
-      } else {
-        return $0
+    do {
+      let doc = try parse(htmlContent)
+      let parahraphs = try doc.select("p")
+      try parahraphs.forEach { paragraph in
+        if try paragraph.text().rangeOfCharacter(from: .lowercaseLetters) != nil {
+          try paragraph.prepend(tag)
+        }
       }
-    }.joined(separator: "</p>")
-    return finalString
+      return try doc.text()
+    } catch Exception.Error(let type, let message) {
+      print(message)
+      return htmlContent
+    } catch {
+      print(error)
+      return htmlContent
+    }
   }
   
   // MARK: - WKWebView Delegate
