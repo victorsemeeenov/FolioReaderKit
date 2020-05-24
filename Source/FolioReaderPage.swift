@@ -39,7 +39,8 @@ extension String {
    
    - parameter recognizer: The tap recognizer
    */
-  @objc optional func pageTap(at point: CGPoint, with selectedWord: String?)
+  @objc optional func pageDidTap(at point: CGPoint, withSelectedWord selectedWord: String?)
+  @objc optional func pageDidTap(at point: CGPoint, withSelectedSentence selectedSentece: String?)
 }
 
 open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecognizerDelegate {
@@ -57,6 +58,8 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
   private var currentHighlightID: String?
   private var oneTapGesture: UITapGestureRecognizer?
   private var twoTapsGesture: UITapGestureRecognizer?
+  private var sentences: [String] = []
+  private var currentSentenceIndex: Int = 0
   
   fileprivate var readerConfig: FolioReaderConfig {
     guard let readerContainer = readerContainer else { return FolioReaderConfig() }
@@ -206,29 +209,62 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
     return tempHtmlContent as String
   }
   
+  private func sentenceTag(id: Int) -> String {
+    return """
+    . <svg class="three-dot" id="sentence-\(id)" onclick="highlightSentence(this)"  width="20" height="18" viewBox="0 0 3 13" xmlns="http://www.w3.org/2000/svg">
+        <circle class="origin-dot" cx="1.5" cy="1.5" r="1.5" fill="#63A1FF"/>
+        <circle cx="1.5" cy="6.5" r="1.5" fill="#63A1FF"/>
+        <circle cx="1.5" cy="11.5" r="1.5" fill="#63A1FF"/>
+    </svg>
+    """
+  }
+  
   private func htmlWithInsertSentenceDots(_ htmlContent: String) -> String {
-    let tag = """
-             <svg width="3" height="13" viewBox="0 0 3 13" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="1.5" cy="1.5" r="1.5" fill="#63A1FF"/>
-                <circle cx="1.5" cy="6.5" r="1.5" fill="#63A1FF"/>
-                <circle cx="1.5" cy="11.5" r="1.5" fill="#63A1FF"/>
-              </svg>
-            """
     do {
+      sentences = []
+      currentSentenceIndex = 0
       let doc = try parse(htmlContent)
       let parahraphs = try doc.select("p")
-      try parahraphs.forEach { paragraph in
-        if try paragraph.text().rangeOfCharacter(from: .lowercaseLetters) != nil {
-          try paragraph.prepend(tag)
+      let colophons = try doc.getElementsByClass("colophon")
+      try colophons.remove()
+      let h1 = try doc.select("h1")
+      let h2 = try doc.select("h2")
+      let h3 = try doc.select("h3")
+      let links = try doc.select("a[href]")
+      for link in links {
+        if (try? link.className()) != "xhtmltoc" {
+          try? link.remove()
         }
       }
-      return try doc.text()
+      try? insertTag(for: h1)
+      try? insertTag(for: h2)
+      try? insertTag(for: h3)
+      try? insertTag(for: parahraphs)
+      try? insertTag(for: links)
+      return try doc.outerHtml()
     } catch Exception.Error(let type, let message) {
       print(message)
       return htmlContent
     } catch {
       print(error)
       return htmlContent
+    }
+  }
+  
+  private func insertTag(for elements: Elements) throws {
+    try elements.forEach { paragraph in
+      let paragraphText = try paragraph.text()
+      if paragraphText.rangeOfCharacter(from: .lowercaseLetters) != nil {
+        let sentences = paragraphText.components(separatedBy: ".")
+        self.sentences.append(contentsOf: sentences)
+        let newHtml = sentences.map { sentence -> String in
+          defer {
+            currentSentenceIndex += 1
+          }
+          return sentence.count > 1 ? sentence.appending(sentenceTag(id: currentSentenceIndex)) : sentence
+        }.joined()
+        try paragraph.html(newHtml)
+      }
     }
   }
   
@@ -413,6 +449,8 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
     let state = recognizer.state
     guard state != .cancelled || state != .failed else { return }
     self.webView?.js("resetSelectionText()")
+    self.webView?.js("resetSelectedSentenceId()")
+    self.webView?.js("removeSentenceHighlight()")
     self.webView?.js("removeThisHighlight()")
     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
       self.handleOneTap(recognizer: recognizer)
@@ -420,14 +458,18 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
   }
   
   private func handleOneTap(recognizer: UITapGestureRecognizer) {
-    let selected = webView?.js("getElementOnTap()")
-    currentHighlightID = webView?.js("getHighlightId()")
     let xString = webView?.js("getHighlightX()")
     let yString = webView?.js("getHighlightY()")
     guard let xStr = xString, let yStr = yString,
       let x = Int(xStr), let y = Int(yStr) else { return }
     let point = CGPoint(x: x, y: y)
-    self.delegate?.pageTap?(at: point, with: selected)
+    let prefix = "sentence-"
+    if let word = webView?.js("getElementOnTap()") {
+      delegate?.pageDidTap?(at: point, withSelectedWord: word)
+    } else if let sentenceID = webView?.js("getSelectedSentenceOnTap()"),
+      sentenceID.hasPrefix(prefix), let index = Int(String(sentenceID.dropFirst(prefix.count))) {
+      delegate?.pageDidTap?(at: point, withSelectedSentence: sentences[index])
+    }
   }
   
   @objc private func handleTwoTaps(_ recognizer: UITapGestureRecognizer) {

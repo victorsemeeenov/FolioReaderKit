@@ -13,40 +13,20 @@ var wordsPerMinute = 180;
 var lastNode;
 var highlightX;
 var higlightY;
+var thisSentenceIDHighlight;
+var thisSentenceHighlight;
 
 document.addEventListener("DOMContentLoaded", function(event) {
   let paragraphElements = document.getElementsByTagName("p");
   console.log(paragraphElements);
   let nodes = [];
-  setListeners(paragraphElements)
+  setCharacterHighlightListeners(paragraphElements)
   for (var i=0; i<paragraphElements.length; i++) {
     getChildElementsRecursive(paragraphElements[i], nodes);
   }
   setListeners(nodes);
   console.log("nodes: " + nodes)
 });
-
-function addDots() {
-    var range = window.getSelection().getRangeAt(0);
-    var startOffset = range.startOffset;
-    var endOffset = range.endOffset;
-    var selectionContents = range.extractContents();
-    var elm = document.createElement("highlight");
-    var id = guid();
-    
-    elm.appendChild(selectionContents);
-    elm.setAttribute("id", id);
-    elm.setAttribute("onclick","callHighlightURL(this);");
-    elm.setAttribute("class", style);
-    
-    range.insertNode(elm);
-    thisHighlight = elm;
-    
-    var params = [];
-    params.push({id: id, rect: getRectForSelectedText(elm), startOffset: startOffset.toString(), endOffset: endOffset.toString()});
-    
-    return JSON.stringify(params);
-}
 
 function getChildElementsRecursive(element, nodes) {
   let childNodes = element.childNodes;
@@ -63,7 +43,26 @@ function getChildElementsRecursive(element, nodes) {
   }
 }
 
-function setListeners(nodes) {
+function highlightSentence(element) {
+  SVGRect = element.getBBox()
+  console.log(thisSelection);
+  var firstElement = element.getElementsByClassName("origin-dot")[0]
+  var rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      rect.setAttribute("x", SVGRect.x - 3);
+      rect.setAttribute("y", SVGRect.y - 3);
+      rect.setAttribute("width", SVGRect.width + 6);
+      rect.setAttribute("height", SVGRect.height + 10);
+      rect.setAttribute("class", "highlight-three-dot");
+      element.insertBefore(rect, firstElement);
+  thisSentenceIDHighlight = element.id;
+  thisSentenceHighlight = rect;
+}
+
+function removeSentenceHighlight() {
+  thisSentenceHighlight.remove();
+}
+
+function setCharacterHighlightListeners(nodes) {
   for (var i=0; i<nodes.length; i++) {
     let listenerNode = nodes[i]
     listenerNode.addEventListener("click",(event) => {
@@ -116,6 +115,10 @@ function guid() {
 
 function resetSelectionText() {
   thisSelection = null;
+}
+
+function resetSelectedSentenceId() {
+  thisSentenceIDHighlight = null;
 }
 
 // Get All HTML
@@ -256,6 +259,10 @@ function getBodyText() {
 
 var getElementOnTap = function() {
   return thisSelection;
+}
+
+var getSelectedSentenceOnTap = function() {
+  return thisSentenceIDHighlight;
 }
 
 function selectedWordOnTap() {
