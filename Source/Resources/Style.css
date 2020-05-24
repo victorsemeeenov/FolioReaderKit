@@ -165,6 +165,7 @@ input, textarea, button, highlight, select, a {
 }
 
 /* Highlight styles */
+html .highlight-three-dot {fill:#ADD8FF}
 html .highlight-yellow {background:rgb(255, 235, 107)}
 html .highlight-green {background:#C0ED72}
 html .highlight-blue {background:#ADD8FF}
@@ -174,7 +175,7 @@ html .highlight-underline {
     border-bottom: 2px solid #F02814;
 }
 
-html .highlight-yellow, html .highlight-green, html .highlight-blue, html .highlight-pink, span.epub-media-overlay-playing {
+html .highlight-yellow, html .highlight-green, html .highlight-blue, html .highlight-pink, span.epub-media-overlay-playing, html .highlight-three-dot {
     border-radius: 3px;
     padding: 0 2px;
     margin: 0 -2px;
