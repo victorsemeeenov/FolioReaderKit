@@ -386,8 +386,9 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     }
 
     private func updateBarsStatus(_ shouldHide: Bool, shouldShowIndicator: Bool = false) {
-        guard let readerContainer = readerContainer else { return }
-        readerContainer.shouldHideStatusBar = shouldHide
+      guard let readerContainer = readerContainer else { return }
+      readerContainer.shouldHideStatusBar = shouldHide
+      readerContainer.setNeedsStatusBarAppearanceUpdate()
 
         UIView.animate(withDuration: 0.25, animations: {
             readerContainer.setNeedsStatusBarAppearanceUpdate()
@@ -1302,7 +1303,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     /**
      Present chapter list
      */
-    @objc func presentChapterList(_ sender: UIBarButtonItem) {
+    @objc open func presentChapterList() {
         folioReader.saveReaderState()
 
         let chapter = FolioReaderChapterList(folioReader: folioReader, readerConfig: readerConfig, book: book, delegate: self)

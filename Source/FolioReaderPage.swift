@@ -308,6 +308,7 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
   
   open func removeLastHighlight() {
     webView?.js("removeThisHighlight()")
+    webView?.js("removeSentenceHighlight()")
   }
   
   open func webView(_ webView: UIWebView, shouldStartLoadWith request: URLRequest, navigationType: UIWebView.NavigationType) -> Bool {
@@ -440,6 +441,9 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
   public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
                                 shouldRequireFailureOf otherGestureRecognizer: UIGestureRecognizer) -> Bool {
     if gestureRecognizer == oneTapGesture && otherGestureRecognizer == twoTapsGesture {
+      return true
+    }
+    if otherGestureRecognizer == twoTapsGesture, let tapGesture = gestureRecognizer as? UITapGestureRecognizer, tapGesture.numberOfTapsRequired == 2 {
       return true
     }
     return false
