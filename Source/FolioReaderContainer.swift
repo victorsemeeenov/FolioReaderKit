@@ -28,7 +28,7 @@ open class FolioReaderContainer: UIViewController {
   public var readerConfig: FolioReaderConfig
   public var folioReader: FolioReader
   
-  fileprivate var errorOnLoad = false
+  public var errorOnLoad = false
   
   // MARK: - Init
   
