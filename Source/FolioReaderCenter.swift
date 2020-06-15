@@ -57,7 +57,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     let collectionViewLayout = UICollectionViewFlowLayout()
     var loadingView: UIActivityIndicatorView!
     var pages: [String]!
-    var totalPages: Int = 0
+    public var totalPages: Int = 0
     var tempFragment: String?
     var animator: ZFModalTransitionAnimator!
     var pageIndicatorView: FolioReaderPageIndicator?
@@ -601,7 +601,8 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         }
     }
 
-    func updateCurrentPage(_ page: FolioReaderPage? = nil, completion: (() -> Void)? = nil) {
+    func updateCurrentPage(_ page: FolioReaderPage? = nil,
+                           completion: (() -> Void)? = nil) {
         if let page = page {
             currentPage = page
             self.previousPageNumber = page.pageNumber-1
@@ -741,11 +742,11 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     }
 
     open func changePageWith(indexPath: IndexPath, animated: Bool = false, completion: (() -> Void)? = nil) {
-        guard indexPathIsValid(indexPath) else {
-            print("ERROR: Attempt to scroll to invalid index path")
-            completion?()
-            return
-        }
+//        guard indexPathIsValid(indexPath) else {
+//            print("ERROR: Attempt to scroll to invalid index path")
+//            completion?()
+//            return
+//        }
 
         UIView.animate(withDuration: animated ? 0.3 : 0, delay: 0, options: UIView.AnimationOptions(), animations: { () -> Void in
             self.collectionView.scrollToItem(at: indexPath, at: .direction(withConfiguration: self.readerConfig), animated: false)
@@ -822,6 +823,20 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         
         return webViewPage
     }
+  
+  public func setCurrentPageItem(pageItem: Int) {
+     guard let cell = collectionView.cellForItem(at: getCurrentIndexPath()) as? FolioReaderPage,
+      let contentSize = cell.webView?.scrollView.contentSize else { return }
+    let contentOffset: CGPoint
+    switch readerConfig.scrollDirection {
+    case .defaultVertical, .vertical:
+      contentOffset = CGPoint(x: 0, y: contentSize.height)
+    case .horizontal, .horizontalWithVerticalContent:
+      contentOffset = CGPoint(x: contentSize.width, y: 0)
+    }
+    cell.webView?.scrollView.setContentOffset(contentOffset,
+                                              animated: false)
+  }
     
     public func getCurrentPageProgress() -> Float {
         guard let page = currentPage else { return 0 }
@@ -1025,6 +1040,16 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
      - parameter animated: En-/Disables the animation of the page change.
      - parameter completion: A Closure which is called if the page change is completed.
      */
+  public func setStartPage(page: Int, pageItem: Int, completion: (() -> Void)?) {
+    let indexPath = IndexPath(row: page-1, section: 0)
+    changePageWith(indexPath: indexPath, animated: false, completion: { () -> Void in
+        self.updateCurrentPage { [weak self] in
+          self?.changePageItem(to: pageItem)
+          completion?()
+        }
+    })
+  }
+  
     public func changePageWith(page: Int, animated: Bool = false, completion: (() -> Void)? = nil) {
         if page > 0 && page-1 < totalPages {
             let indexPath = IndexPath(row: page-1, section: 0)
